@@ -82,37 +82,37 @@ const FloorComponent = ({
     }
   }, [isSelected, isDetailView]);
 
-  // Animate floor glow effect
+  // Animate floor glow effect with blue gleam
   useFrame((state) => {
     if (floorMeshRef.current) {
       const material = floorMeshRef.current.material as THREE.MeshStandardMaterial;
       if (isSelected) {
-        material.emissive.setHex(0x333333);
-        material.emissiveIntensity = 0.2 + Math.sin(state.clock.elapsedTime * 2) * 0.1;
+        material.emissive.setHex(0x1E3A8A); // Blue gleam
+        material.emissiveIntensity = 0.3 + Math.sin(state.clock.elapsedTime * 2) * 0.15;
       } else {
-        material.emissive.setHex(0x000000);
-        material.emissiveIntensity = 0;
+        material.emissive.setHex(0x1E3A8A); // Subtle blue gleam always present
+        material.emissiveIntensity = 0.1;
       }
     }
   });
 
-  // Glass-like material for the floor slices
+  // Solid material with blue gleam for the floor slices
   const floorMaterial = useMemo(() => {
-    const baseColor = (isHovered || isSelected) ? '#FFD700' : '#FFFFFF'; // Gold when hovered/selected
+    const baseColor = (isHovered || isSelected) ? '#4169E1' : '#2C3E50'; // Blue when hovered/selected, dark gray base
     return new THREE.MeshStandardMaterial({
       color: baseColor,
-      transparent: true,
-      opacity: isSelected ? 0.9 : isHovered ? 0.7 : 0.5, // Less transparent - increased from 0.8/0.6/0.3
-      roughness: 0.1,
-      metalness: 0.8,
-      emissive: baseColor,
-      emissiveIntensity: isSelected ? 0.3 : isHovered ? 0.2 : 0.05,
+      transparent: true, // Make it transparent
+      opacity: isSelected ? 0.8 : isHovered ? 0.6 : 0.4, // Slightly less transparent
+      roughness: 0.2, // Slightly rougher for more realistic metal look
+      metalness: 0.9, // High metalness for gleaming effect
+      emissive: '#1E3A8A', // Blue gleam
+      emissiveIntensity: isSelected ? 0.4 : isHovered ? 0.3 : 0.15, // Blue glow intensity
     });
   }, [isSelected, isHovered]);
 
-  // Wireframe material for cube edges
+  // Wireframe material for cube edges with blue accent
   const edgesMaterial = useMemo(() => {
-    const edgeColor = (isHovered || isSelected) ? '#FFD700' : '#FFFFFF';
+    const edgeColor = (isHovered || isSelected) ? '#4169E1' : '#6B7280'; // Blue for active, gray for inactive
     return new THREE.LineBasicMaterial({
       color: edgeColor,
       transparent: true,
