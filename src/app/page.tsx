@@ -34,12 +34,13 @@ export default function Home() {
       
       // Handle machine status updates
       if (data.operationType === 'update' && data.updateDescription?.updatedFields?.in_use !== undefined) {
-        // Get the machine ID from the full document
-        if (!data.fullDocument || !data.fullDocument.id) {
+        // Get the machine ID from the full document (not the MongoDB _id)
+        if (!data.fullDocument || typeof data.fullDocument.id !== 'number') {
+          console.log('Cannot determine machine ID from change stream');
           return;
         }
         
-        const machineId = data.fullDocument.id;
+        const machineId = data.fullDocument.id; // Use the machine's actual id field
         const newInUseStatus = data.updateDescription.updatedFields.in_use;
         
         // Avoid updating if this machine was just manually updated in the last 2 seconds
