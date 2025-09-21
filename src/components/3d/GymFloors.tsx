@@ -247,24 +247,6 @@ export const GymFloors = ({
   const groupRef = useRef<THREE.Group>(null);
   const isDetailView = currentView.type === 'floor-detail';
 
-  // Debug logging
-  console.log('GymFloors rendering:', { 
-    floorsCount: floors.length, 
-    isDetailView, 
-    floors: floors.map(f => ({ id: f.id, machineCount: f.machines.length }))
-  });
-
-  // Remove the floating animation - keep floors static
-  // useFrame((state) => {
-  //   if (groupRef.current && !isTransitioning) {
-  //     // Subtle floating animation in overview mode
-  //     if (!isDetailView) {
-  //       groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.2) * 0.05;
-  //       groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.2;
-  //     }
-  //   }
-  // });
-
   return React.createElement('group', { 
     ref: groupRef,
     rotation: [0, (100 * Math.PI) / 180, 0] // Rotate 100 degrees around Y-axis to make text visible
