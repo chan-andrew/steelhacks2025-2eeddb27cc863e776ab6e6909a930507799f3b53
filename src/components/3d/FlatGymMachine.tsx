@@ -95,10 +95,10 @@ export const FlatGymMachine = ({
   const color = getMachineColor(machine, isSelected, isFiltered, isHovered);
   const iconPath = getMachineIcon(machine.name);
 
-  // Force recalculated position with increased spacing
+  // Machine position relative to its floor (floor group handles Y positioning)
   const position: [number, number, number] = useMemo(() => [
     (machine.x - 10) / 1.5, // Increased spacing - force calculation
-    0.5, // Much higher above floor to avoid click conflicts
+    0.08, // Small offset above the floor surface (relative to floor group)
     (machine.y - 10) / 1.5  // Increased spacing - force calculation
   ], [machine.x, machine.y]);
 
