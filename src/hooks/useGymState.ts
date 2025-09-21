@@ -145,7 +145,7 @@ export const useGymState = () => {
   const selectMachine = useCallback((machineId: number | undefined) => {
       setGymState(prev => ({
         ...prev,
-        selectedMachine: machineId === undefined ? undefined : (prev.selectedMachine === machineId ? undefined : machineId),
+        selectedMachine: machineId,
       }));
     }, []);
 

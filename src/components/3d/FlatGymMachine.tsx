@@ -15,31 +15,20 @@ interface FlatGymMachineProps {
 }
 
 const getMachineColor = (machine: Machine, isSelected: boolean, isFiltered: boolean = false) => {
-  if (machine.in_use) {
-    return '#FF0000'; // Red for in use
+  if (isFiltered) {
+    return '#333333'; // Dark gray for filtered out
   }
   
   if (isSelected) {
     return '#FFD700'; // Gold for selected
   }
   
-  if (isFiltered) {
-    return '#333333'; // Dark gray for filtered out
+  if (machine.in_use) {
+    return '#FF0000'; // Red for in use
   }
   
-  // Default colors based on muscle group
-  const primaryMuscle = machine.muscles[0]?.toLowerCase() || '';
-  
-  if (primaryMuscle.includes('cardio')) return '#00CED1';
-  if (primaryMuscle.includes('chest')) return '#4169E1';
-  if (primaryMuscle.includes('back') || primaryMuscle.includes('lats')) return '#32CD32';
-  if (primaryMuscle.includes('shoulder')) return '#FF6347';
-  if (primaryMuscle.includes('biceps') || primaryMuscle.includes('triceps')) return '#9370DB';
-  if (primaryMuscle.includes('quads') || primaryMuscle.includes('hamstrings') || primaryMuscle.includes('glutes')) return '#FFB347';
-  if (primaryMuscle.includes('calves')) return '#20B2AA';
-  if (primaryMuscle.includes('abs')) return '#FF69B4';
-  
-  return '#CCCCCC'; // Default gray
+  // Green for available machines
+  return '#00FF00';
 };
 
 export const FlatGymMachine = ({ 

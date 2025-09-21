@@ -81,9 +81,16 @@ export default function Home() {
     actions.setFilteredMuscleGroup(muscleGroup);
   };
 
-  const handleMachineSelect = (machine: Machine) => {
-    actions.selectMachine(machine.id);
-    actions.setCurrentPosition({ floor: machine.floor, x: machine.x, y: machine.y });
+  const handleMachineSelect = (machineId: number | Machine) => {
+    const id = typeof machineId === 'number' ? machineId : machineId.id;
+    const machine = typeof machineId === 'number' 
+      ? allMachines.find(m => m.id === machineId)
+      : machineId;
+    
+    actions.selectMachine(id);
+    if (machine) {
+      actions.setCurrentPosition({ floor: machine.floor, x: machine.x, y: machine.y });
+    }
   };
 
   const handleFindClosest = async (machine: Machine) => {
@@ -137,7 +144,7 @@ export default function Home() {
           className="w-full h-full"
           gymState={gymState}
           onFloorSelect={actions.selectFloor}
-          onMachineSelect={actions.selectMachine}
+          onMachineSelect={handleMachineSelect}
           onMachineToggle={actions.toggleMachineStatus}
           onReturnToOverview={actions.returnToOverview}
         />
@@ -147,7 +154,7 @@ export default function Home() {
       <MuscleSidebar
         machines={allMachines}
         onMuscleGroupSelect={handleMuscleGroupSelect}
-        onMachineSelect={handleMachineSelect}
+        onMachineSelect={(machine) => handleMachineSelect(machine)}
         onFindClosest={handleFindClosest}
         selectedMuscleGroup={gymState.filteredMuscleGroup}
         selectedMachine={selectedMachine}

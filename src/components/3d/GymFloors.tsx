@@ -198,9 +198,9 @@ const FloorComponent = ({
         },
           React.createElement('sphereGeometry', { args: [0.06] }),
           React.createElement('meshStandardMaterial', {
-            color: machine.in_use ? '#ef4444' : '#ffffff',
-            emissive: machine.in_use ? '#ef4444' : '#000000',
-            emissiveIntensity: machine.in_use ? 0.3 : 0,
+            color: machine.in_use ? '#FF0000' : '#00FF00', // Red for in use, Green for available
+            emissive: machine.in_use ? '#FF0000' : '#00FF00',
+            emissiveIntensity: 0.3,
             transparent: true,
             opacity: 0.8
           })
