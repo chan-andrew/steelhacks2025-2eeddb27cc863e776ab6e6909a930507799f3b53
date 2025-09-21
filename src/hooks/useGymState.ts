@@ -148,11 +148,17 @@ export const useGymState = () => {
   }, []);
 
   const selectMachine = useCallback((machineId: number | undefined) => {
-      setGymState(prev => ({
+    console.log('selectMachine called with:', machineId);
+    setGymState(prev => {
+      console.log('Previous selected machine:', prev.selectedMachine);
+      const newState = {
         ...prev,
         selectedMachine: machineId,
-      }));
-    }, []);
+      };
+      console.log('New selected machine:', newState.selectedMachine);
+      return newState;
+    });
+  }, []);
 
   const loadMachines = useCallback((machines: Machine[]) => {
     console.log('Loading machines:', machines.length, 'total machines');
@@ -200,10 +206,16 @@ export const useGymState = () => {
   }, []);
 
   const setFilteredMuscleGroup = useCallback((muscleGroup: string | undefined) => {
-    setGymState(prev => ({
-      ...prev,
-      filteredMuscleGroup: muscleGroup
-    }));
+    console.log('setFilteredMuscleGroup called with:', muscleGroup);
+    setGymState(prev => {
+      console.log('Previous filtered muscle group:', prev.filteredMuscleGroup);
+      const newState = {
+        ...prev,
+        filteredMuscleGroup: muscleGroup
+      };
+      console.log('New filtered muscle group:', newState.filteredMuscleGroup);
+      return newState;
+    });
   }, []);
 
   const setCurrentPosition = useCallback((position: { floor: number; x: number; y: number }) => {

@@ -93,18 +93,18 @@ export default function Home() {
       ? allMachines.find(m => m.id === machineId)
       : machineId;
     
-    console.log('Machine selected:', id, 'Current filter before clear:', gymState.filteredMuscleGroup);
+    console.log('=== MACHINE SELECT START ===');
+    console.log('Machine selected:', id);
+    console.log('Current selected machine:', gymState.selectedMachine);
+    console.log('Machine data:', machine);
     
-    // Clear any active muscle group filter when selecting a machine directly
-    if (gymState.filteredMuscleGroup) {
-      console.log('Clearing muscle group filter');
-      actions.setFilteredMuscleGroup(undefined);
-    }
-    
+    // Just select the machine - don't clear filters
     actions.selectMachine(id);
     if (machine) {
       actions.setCurrentPosition({ floor: machine.floor, x: machine.x, y: machine.y });
     }
+    
+    console.log('=== MACHINE SELECT END ===');
   };
 
   const handleFindClosest = async (machine: Machine) => {

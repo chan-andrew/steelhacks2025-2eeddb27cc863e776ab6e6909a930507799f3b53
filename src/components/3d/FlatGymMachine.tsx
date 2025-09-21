@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Box, Text } from '@react-three/drei';
 import * as THREE from 'three';
@@ -46,16 +46,31 @@ export const FlatGymMachine = ({
   const color = getMachineColor(machine, isSelected, isFiltered);
 
   // Use the pre-calculated position from the machine object
-  const position: [number, number, number] = machine.position || [
-    (machine.x - 10) / 2, // Fallback calculation
-    0.05, // Slightly above floor
-    (machine.y - 10) / 2
-  ];
+  const position: [number, number, number] = useMemo(() => 
+    machine.position || [
+      (machine.x - 10) / 2, // Fallback calculation
+      0.05, // Slightly above floor
+      (machine.y - 10) / 2
+    ], [machine.position, machine.x, machine.y]
+  );
+
+  // Ensure position is reset when selection changes
+  useEffect(() => {
+    if (machineRef.current && !isSelected) {
+      machineRef.current.position.y = position[1];
+    }
+  }, [isSelected, position]);
 
   // Animate selected machines
   useFrame((state) => {
-    if (machineRef.current && isSelected) {
-      machineRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 3) * 0.05;
+    if (machineRef.current) {
+      if (isSelected) {
+        // Animate position when selected
+        machineRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 3) * 0.05;
+      } else {
+        // Reset to original position when not selected
+        machineRef.current.position.y = position[1];
+      }
     }
 
     // Pulsing effect for in-use machines
