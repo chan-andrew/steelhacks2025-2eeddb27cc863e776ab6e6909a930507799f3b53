@@ -1,10 +1,34 @@
 'use client';
 
 import { useRef, useMemo, useEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useLoader } from '@react-three/fiber';
 import { Box, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { Machine } from '@/types/gym';
+import { getMachineIcon } from '@/utils/iconMapping';
+
+// Component to display machine icon
+const MachineIcon = ({ iconPath, position }: { iconPath: string; position: [number, number, number] }) => {
+  try {
+    const texture = useLoader(THREE.TextureLoader, iconPath);
+    
+    return (
+      <mesh position={position} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[0.6, 0.6]} />
+        <meshBasicMaterial 
+          map={texture} 
+          transparent 
+          alphaTest={0.1}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+    );
+  } catch {
+    // If icon fails to load, return null (no icon)
+    console.log(`Failed to load icon: ${iconPath}`);
+    return null;
+  }
+};
 
 interface FlatGymMachineProps {
   machine: Machine;
@@ -42,6 +66,7 @@ export const FlatGymMachine = ({
   const iconRef = useRef<THREE.Mesh>(null);
   
   const color = getMachineColor(machine, isSelected, isFiltered);
+  const iconPath = getMachineIcon(machine.name);
 
   // Use the pre-calculated position from the machine object
   const position: [number, number, number] = useMemo(() => 
@@ -118,6 +143,14 @@ export const FlatGymMachine = ({
         castShadow
         receiveShadow
       />
+
+      {/* Machine Icon - display the actual icon image on top of the machine */}
+      {iconPath && (
+        <MachineIcon 
+          iconPath={iconPath} 
+          position={[0, 0.06, 0]} // Slightly above the machine box
+        />
+      )}
 
       {/* Selection Ring */}
       {isSelected && (
