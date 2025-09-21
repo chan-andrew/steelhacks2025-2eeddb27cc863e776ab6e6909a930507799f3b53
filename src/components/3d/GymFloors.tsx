@@ -170,6 +170,20 @@ const FloorComponent = ({
       </Text>
     ),
 
+    // Floor Label Behind - Always visible "Floor #" text behind the floor
+    <Text
+      position={[cubeSize/2 + 1.5, 0.05, 0]} // Position on the x=16 side (back edge)
+      fontSize={1.0}
+      color="#FFFFFF"
+      anchorX="center"
+      anchorY="middle"
+      rotation={[0, -Math.PI/2, 0]} // Rotate to face the viewer from the back edge
+      outlineWidth={0.1}
+      outlineColor="#000000" // Add outline for better visibility
+    >
+      {`Floor ${floor.id}`}
+    </Text>,
+
     // Machines - only show when in detail view and floor is selected
     shouldShowMachines && React.createElement('group', {},
       (() => {
