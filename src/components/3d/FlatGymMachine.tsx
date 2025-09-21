@@ -2,7 +2,7 @@
 
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame, useLoader } from '@react-three/fiber';
-import { Box, Text } from '@react-three/drei';
+import { Text, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
 import { Machine } from '@/types/gym';
 import { getMachineIcon } from '@/utils/iconMapping';
@@ -14,7 +14,7 @@ const MachineIcon = ({ iconPath, position }: { iconPath: string; position: [numb
     
     return (
       <mesh position={position} rotation={[-Math.PI / 2, 0, 3 * Math.PI / 2]}>
-        <planeGeometry args={[0.6, 0.6]} />
+        <planeGeometry args={[1.2, 1.2]} />
         <meshBasicMaterial 
           map={texture} 
           transparent 
@@ -52,7 +52,7 @@ const getMachineColor = (machine: Machine, isSelected: boolean, isFiltered: bool
     return '#FF0000'; // Red for in use
   }
   
-  // Green for available machines
+  // Light blue for available machines
   return '#00FF00';
 };
 
@@ -69,14 +69,12 @@ export const FlatGymMachine = ({
   const color = getMachineColor(machine, isSelected, isFiltered);
   const iconPath = getMachineIcon(machine.name);
 
-  // Use the pre-calculated position from the machine object
-  const position: [number, number, number] = useMemo(() => 
-    machine.position || [
-      (machine.x - 10) / 2, // Fallback calculation
-      0.05, // Slightly above floor
-      (machine.y - 10) / 2
-    ], [machine.position, machine.x, machine.y]
-  );
+  // Force recalculated position with increased spacing
+  const position: [number, number, number] = useMemo(() => [
+    (machine.x - 10) / 1.5, // Increased spacing - force calculation
+    0.05, // Slightly above floor
+    (machine.y - 10) / 1.5  // Increased spacing - force calculation
+  ], [machine.x, machine.y]);
 
   // Ensure position is reset when selection changes
   useEffect(() => {
@@ -110,9 +108,9 @@ export const FlatGymMachine = ({
       roughness: 0.4,
       metalness: 0.6,
       transparent: true,
-      opacity: isFiltered ? 0.6 : (machine.in_use ? 0.9 : 0.8), // Make filtered machines more visible
-      emissive: machine.in_use ? color : '#000000',
-      emissiveIntensity: machine.in_use ? 0.2 : 0,
+      opacity: isFiltered ? 0.6 : 1.0, // Full opacity for available machines
+      emissive: color,
+      emissiveIntensity: 0.2,
     });
   }, [color, machine.in_use, isFiltered]);
 
@@ -136,10 +134,12 @@ export const FlatGymMachine = ({
         document.body.style.cursor = 'default';
       }}
     >
-      {/* Flat Machine Icon - very thin box */}
-      <Box
+      {/* Flat Machine Icon - very thin box with rounded corners */}
+      <RoundedBox
         ref={iconRef}
-        args={[0.8, 0.1, 0.8]} // Flat icon dimensions
+        args={[1.4, 0.1, 1.4]} // Even bigger flat icon dimensions
+        radius={0.05} // Small rounded corners
+        smoothness={4} // Smoothness of the rounded corners
         material={machineMaterial}
         castShadow
         receiveShadow

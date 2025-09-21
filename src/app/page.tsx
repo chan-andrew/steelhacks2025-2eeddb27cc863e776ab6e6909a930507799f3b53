@@ -72,8 +72,8 @@ export default function Home() {
         muscles: machine.muscles, // Database already has muscles as array
         x: machine.x,
         y: machine.y,
-        // Better position calculation - map from 0-20 range to -5 to +5 range
-        position: [((machine.x - 10) / 2), 0, ((machine.y - 10) / 2)] as [number, number, number],
+        // Better position calculation - map from 0-20 range to -5 to +5 range with increased spacing
+        position: [((machine.x - 10) / 1.5), 0, ((machine.y - 10) / 1.5)] as [number, number, number],
         rotation: [0, 0, 0] as [number, number, number],
         dimensions: [0.8, 0.1, 0.8] as [number, number, number]
       }));
