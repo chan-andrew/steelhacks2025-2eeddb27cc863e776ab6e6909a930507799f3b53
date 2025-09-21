@@ -47,7 +47,7 @@ export const useGymState = () => {
   });
 
   const selectFloor = useCallback((floorId: number) => {
-    const floorY = (floorId - 3) * 1.5; // Match the floor positioning
+    const floorY = (floorId - 3) * 2.5; // Match the floor positioning with new spacing
     
     // Phase 1: Start fade-out of other floors (0-800ms)
     setGymState(prev => ({

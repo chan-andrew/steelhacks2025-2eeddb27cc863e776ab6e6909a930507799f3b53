@@ -44,7 +44,7 @@ const FloorComponent = ({
   const [animationScale, setAnimationScale] = useState(1);
   
   // Position floors as slices of a cube - closer together for layered look
-  const floorY = (floor.level - 3) * 1.5; // Center around 0, 1.5 units apart
+  const floorY = (floor.level - 3) * 2.5; // Center around 0, 2.5 units apart for more spacing
   
   // Show machines in overview mode for all floors, or in detail view only for selected floor
   const shouldShowMachines = !isDetailView || (isDetailView && isSelected);
@@ -102,7 +102,7 @@ const FloorComponent = ({
     return new THREE.MeshStandardMaterial({
       color: baseColor,
       transparent: true,
-      opacity: isSelected ? 0.8 : isHovered ? 0.6 : 0.3,
+      opacity: isSelected ? 0.9 : isHovered ? 0.7 : 0.5, // Less transparent - increased from 0.8/0.6/0.3
       roughness: 0.1,
       metalness: 0.8,
       emissive: baseColor,
