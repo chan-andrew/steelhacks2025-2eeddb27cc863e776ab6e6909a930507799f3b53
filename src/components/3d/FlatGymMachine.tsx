@@ -54,11 +54,11 @@ export const FlatGymMachine = ({
   
   const color = getMachineColor(machine, isSelected, isFiltered);
 
-  // Convert grid coordinates to 3D position (16x16 grid, coordinates 4-16)
-  const position: [number, number, number] = [
-    (machine.x - 10) * 1.5, // Center around 0, spread out
+  // Use the pre-calculated position from the machine object
+  const position: [number, number, number] = machine.position || [
+    (machine.x - 10) / 2, // Fallback calculation
     0.05, // Slightly above floor
-    (machine.y - 10) * 1.5
+    (machine.y - 10) / 2
   ];
 
   // Animate selected machines

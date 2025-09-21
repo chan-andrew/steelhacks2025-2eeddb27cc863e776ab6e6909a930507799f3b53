@@ -1,6 +1,5 @@
 // MongoDB Machine format
 export interface Machine {
-  _id: string;
   id: number;
   name: string;
   floor: number;
@@ -40,7 +39,7 @@ export interface GymState {
   floors: GymFloor[];
   currentView: ViewMode;
   isTransitioning: boolean;
-  selectedMachine?: string;
+  selectedMachine?: number;
   filteredMuscleGroup?: string;
   currentPosition?: { floor: number; x: number; y: number };
 }

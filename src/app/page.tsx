@@ -1,85 +1,88 @@
 'use client';
 
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ClientOnly3D } from '@/components/ClientOnly3D';
 import { NavigationControls } from '@/components/ui/NavigationControls';
 import { MachineStatusPanel } from '@/components/ui/MachineStatusPanel';
-import { EquipmentLegend } from '@/components/ui/EquipmentLegend';
 import { EnhancedFloorScrollBar } from '@/components/ui/EnhancedFloorScrollBar';
 import { MuscleSidebar } from '@/components/ui/MuscleSidebar';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'; // fixed import
 import { useGymState } from '@/hooks/useGymState';
-import { Machine, MachineUpdateMessage } from '@/types/gym';
+import { Machine } from '@/types/gym';
+import { getMachines } from './server';
 
 export default function Home() {
   const { gymState, selectedFloor, selectedMachine, actions } = useGymState();
   const [allMachines, setAllMachines] = useState<Machine[]>([]);
+  const actionsRef = useRef(actions);
+  
+  // Keep actionsRef current
+  useEffect(() => {
+    actionsRef.current = actions;
+  }, [actions]);
 
   const isFloorDetailView = gymState.currentView.type === 'floor-detail';
   const showBackButton = isFloorDetailView;
 
-  // Load machines from API
   useEffect(() => {
-    const loadMachines = async () => {
-      try {
-        const response = await fetch('/api/machines');
-        if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-        const machines: Machine[] = await response.json();
-        setAllMachines(machines);
-        actions.loadMachines(machines);
-      } catch (error) {
-        console.error('Error loading machines:', error);
-      }
-    };
-
-    loadMachines();
-  }, [actions]);
-
-  // Handle real-time updates
-  useEffect(() => {
-    const eventSource = new EventSource('/api/stream');
+    const eventSource = new EventSource("/api/stream");
 
     eventSource.onmessage = (event: MessageEvent) => {
-      try {
-        const data: MachineUpdateMessage = JSON.parse(event.data);
-        console.log('Machine change:', data);
-
-        if (
-          data.operationType === 'update' &&
-          data.updateDescription?.updatedFields?.in_use !== undefined
-        ) {
-          const machineId = data.documentKey._id;
-          const newInUseStatus = data.updateDescription.updatedFields.in_use;
-
-          // Update local state
-          setAllMachines(prev =>
-            prev.map(machine =>
-              machine._id === machineId
-                ? { ...machine, in_use: newInUseStatus }
-                : machine
-            )
-          );
-
-          // Update gym state
-          actions.updateMachineStatus(machineId, newInUseStatus);
-        }
-      } catch (error) {
-        console.error('Error parsing machine update:', error);
+      const data = JSON.parse(event.data);
+      console.log("Machine change:", data);
+      
+      // Handle machine status updates
+      if (data.operationType === 'update' && data.updateDescription?.updatedFields?.in_use !== undefined) {
+        const machineId = parseInt(data.documentKey._id);
+        const newInUseStatus = data.updateDescription.updatedFields.in_use;
+        
+        // Update local state
+        setAllMachines(prev => 
+          prev.map(machine => 
+            machine.id === machineId 
+              ? { ...machine, in_use: newInUseStatus }
+              : machine
+          )
+        );
+        
+        // Update gym state - use the ref to avoid dependency issues
+        actionsRef.current.updateMachineStatus(machineId, newInUseStatus);
       }
     };
+
+    getMachines().then(machines => {
+      console.log('Loaded', machines.length, 'machines from database');
+      const mappedMachines = machines.map(machine => ({
+        id: machine.id,
+        name: machine.name,
+        floor: machine.floor,
+        in_use: machine.in_use,
+        muscles: machine.muscles, // Database already has muscles as array
+        x: machine.x,
+        y: machine.y,
+        // Better position calculation - map from 0-20 range to -5 to +5 range
+        position: [((machine.x - 10) / 2), 0, ((machine.y - 10) / 2)] as [number, number, number],
+        rotation: [0, 0, 0] as [number, number, number],
+        dimensions: [0.8, 0.1, 0.8] as [number, number, number]
+      }));
+      setAllMachines(mappedMachines);
+      actionsRef.current.loadMachines(mappedMachines);
+    }).catch(error => {
+      console.error('Error loading machines:', error);
+    });
 
     return () => {
       eventSource.close();
     };
-  }, [actions]);
+  }, []); // Remove actions dependency to prevent infinite loop
 
   const handleMuscleGroupSelect = (muscleGroup: string | undefined) => {
     actions.setFilteredMuscleGroup(muscleGroup);
   };
 
   const handleMachineSelect = (machine: Machine) => {
-    actions.selectMachine(machine._id);
+    actions.selectMachine(machine.id);
     actions.setCurrentPosition({ floor: machine.floor, x: machine.x, y: machine.y });
   };
 
@@ -99,11 +102,11 @@ export default function Home() {
       if (response.ok) {
         const result = await response.json();
         if (result.nearest) {
-          const closestMachine = allMachines.find(m => m._id === result.nearest._id);
+          const closestMachine = allMachines.find(m => m.id === result.nearest.id);
           if (closestMachine) {
             actions.selectFloor(closestMachine.floor);
             setTimeout(() => {
-              actions.selectMachine(closestMachine._id);
+              actions.selectMachine(closestMachine.id);
             }, 1200);
           }
         }
@@ -130,7 +133,14 @@ export default function Home() {
 
       {/* 3D Visualization - Client-side only */}
       <Suspense fallback={<LoadingSpinner />}>
-        <ClientOnly3D className="w-full h-full" />
+        <ClientOnly3D 
+          className="w-full h-full"
+          gymState={gymState}
+          onFloorSelect={actions.selectFloor}
+          onMachineSelect={actions.selectMachine}
+          onMachineToggle={actions.toggleMachineStatus}
+          onReturnToOverview={actions.returnToOverview}
+        />
       </Suspense>
 
       {/* Muscle Sidebar */}
@@ -154,29 +164,9 @@ export default function Home() {
       {selectedMachine && (
         <MachineStatusPanel
           machine={selectedMachine}
-          onToggleStatus={() => actions.toggleMachineStatus(selectedMachine._id)}
+          onToggleStatus={() => actions.toggleMachineStatus(selectedMachine.id)}
           onClose={() => actions.selectMachine(undefined)} // fixed close
         />
-      )}
-
-      {/* Legend */}
-      {!isFloorDetailView && (
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
-          <div className="flex items-center gap-6 text-sm text-white/70">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-white"></div>
-              <span>Cardio</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-white/70"></div>
-              <span>Strength</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-white/40"></div>
-              <span>Free Weights</span>
-            </div>
-          </div>
-        </div>
       )}
 
       {/* Floor Detail Instructions */}
@@ -219,9 +209,6 @@ export default function Home() {
           </div>
         </motion.div>
       )}
-
-      {/* Equipment Legend */}
-      <EquipmentLegend show={isFloorDetailView && !gymState.isTransitioning} />
 
       {/* Floor Scroll Bar */}
       <EnhancedFloorScrollBar

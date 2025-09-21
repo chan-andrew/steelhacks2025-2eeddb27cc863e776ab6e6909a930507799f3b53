@@ -12,9 +12,9 @@ interface GymFloorsProps {
   currentView: ViewMode;
   isTransitioning: boolean;
   onFloorClick: (floorId: number) => void;
-  onMachineClick: (machineId: string) => void;
-  onMachineToggle: (machineId: string) => void;
-  selectedMachine?: string;
+  onMachineClick: (machineId: number) => void;
+  onMachineToggle: (machineId: number) => void;
+  selectedMachine?: number;
   filteredMuscleGroup?: string;
 }
 
@@ -32,9 +32,9 @@ const FloorComponent = ({
   isSelected: boolean;
   isDetailView: boolean;
   onFloorClick: (floorId: number) => void;
-  onMachineClick: (machineId: string) => void;
-  onMachineToggle: (machineId: string) => void;
-  selectedMachine?: string;
+  onMachineClick: (machineId: number) => void;
+  onMachineToggle: (machineId: number) => void;
+  selectedMachine?: number;
   filteredMuscleGroup?: string;
 }) => {
   const floorRef = useRef<THREE.Group>(null);
@@ -177,24 +177,24 @@ const FloorComponent = ({
         ));
         
         return React.createElement(FlatGymMachine, {
-          key: machine._id,
+          key: machine.id,
           machine: machine,
-          isSelected: selectedMachine === machine._id,
+          isSelected: selectedMachine === machine.id,
           isFiltered: isFiltered,
-          onClick: () => onMachineClick(machine._id),
-          onToggle: () => onMachineToggle(machine._id)
+          onClick: () => onMachineClick(machine.id),
+          onToggle: () => onMachineToggle(machine.id)
         });
       })
     ),
 
     // Machine Dots Visualization - Small dots representing machines on the floor plane
     !shouldShowMachines && React.createElement('group', {},
-      floor.machines.slice(0, 25).map((machine, i) => {
-        const x = (i % 5 - 2) * 2;
-        const z = (Math.floor(i / 5) - 2) * 2;
+      floor.machines.map((machine) => {
+        // Use the machine's actual position for dots
+        const position = machine.position || [((machine.x - 10) / 2), 0.03, ((machine.y - 10) / 2)];
         return React.createElement('mesh', { 
-          key: machine._id, 
-          position: [x, 0.03, z] 
+          key: machine.id, 
+          position: [position[0], 0.03, position[2]] // Use actual machine position but keep Y at 0.03
         },
           React.createElement('sphereGeometry', { args: [0.06] }),
           React.createElement('meshStandardMaterial', {

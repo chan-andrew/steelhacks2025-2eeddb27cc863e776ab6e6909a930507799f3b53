@@ -174,9 +174,9 @@ export const MuscleSidebar = ({
                     {/* Machines */}
                     {selectedGroupMachines.map((machine) => (
                       <motion.div
-                        key={machine._id}
+                        key={machine.id}
                         className={`p-3 rounded-lg glass-effect ${
-                          selectedMachine?._id === machine._id ? 'ring-2 ring-accent-gold' : ''
+                          selectedMachine?.id === machine.id ? 'ring-2 ring-accent-gold' : ''
                         }`}
                       >
                         <div className="flex items-center justify-between mb-2">
