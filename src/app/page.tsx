@@ -104,8 +104,21 @@ export default function Home() {
       : machineId;
     
     if (machine) {
-      // Just select the machine directly - no floor transitions or loading
-      actions.selectMachine(id);
+      // If a Machine object was passed (from sidebar), do floor transition
+      // If a number was passed (from 3D click), just select machine directly
+      if (typeof machineId === 'object') {
+        // Sidebar selection - navigate to the machine's floor first
+        actions.selectFloor(machine.floor);
+        // Set current position
+        actions.setCurrentPosition({ floor: machine.floor, x: machine.x, y: machine.y });
+        // Then select the machine after the floor transition
+        setTimeout(() => {
+          actions.selectMachine(id);
+        }, 1200); // Wait for floor transition to complete
+      } else {
+        // Direct 3D click - just select the machine immediately
+        actions.selectMachine(id);
+      }
     }
   };
 
