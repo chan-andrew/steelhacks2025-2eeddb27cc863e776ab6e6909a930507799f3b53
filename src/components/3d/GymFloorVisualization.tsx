@@ -141,7 +141,7 @@ export const GymFloorVisualization = ({
           />
 
           {/* Environment */}
-          <fog attach="fog" args={['#000000', 30, 100]} />
+          <fog attach="fog" args={['#2c4a7a', 30, 100]} />
         </Suspense>
         </Canvas>
       </TouchGestureOverlay>

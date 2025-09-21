@@ -168,7 +168,7 @@ export default function Home() {
 
   return (
     <main className="w-screen
-     h-screen bg-black overflow-hidden relative">
+     h-screen overflow-hidden relative" style={{ background: 'radial-gradient(ellipse at center, #4169E1 20%, #2c4a7a 60%, #1a2c4a 100%)' }}>
       {/* Title */}
       {!isFloorDetailView && (
         <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none">
