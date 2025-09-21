@@ -53,6 +53,8 @@ export default function Home() {
 
     getMachines().then(machines => {
       console.log('Loaded', machines.length, 'machines from database');
+      console.log('Raw machines by floor:', machines.reduce((acc: Record<number, number>, m) => { acc[m.floor] = (acc[m.floor] || 0) + 1; return acc; }, {}));
+      
       const mappedMachines = machines.map(machine => ({
         id: machine.id,
         name: machine.name,
@@ -66,6 +68,9 @@ export default function Home() {
         rotation: [0, 0, 0] as [number, number, number],
         dimensions: [0.8, 0.1, 0.8] as [number, number, number]
       }));
+      
+      console.log('Mapped machines by floor:', mappedMachines.reduce((acc: Record<number, number>, m) => { acc[m.floor] = (acc[m.floor] || 0) + 1; return acc; }, {}));
+      
       setAllMachines(mappedMachines);
       actionsRef.current.loadMachines(mappedMachines);
     }).catch(error => {
@@ -78,6 +83,7 @@ export default function Home() {
   }, []); // Remove actions dependency to prevent infinite loop
 
   const handleMuscleGroupSelect = (muscleGroup: string | undefined) => {
+    console.log('Setting muscle group filter to:', muscleGroup);
     actions.setFilteredMuscleGroup(muscleGroup);
   };
 
@@ -86,6 +92,14 @@ export default function Home() {
     const machine = typeof machineId === 'number' 
       ? allMachines.find(m => m.id === machineId)
       : machineId;
+    
+    console.log('Machine selected:', id, 'Current filter before clear:', gymState.filteredMuscleGroup);
+    
+    // Clear any active muscle group filter when selecting a machine directly
+    if (gymState.filteredMuscleGroup) {
+      console.log('Clearing muscle group filter');
+      actions.setFilteredMuscleGroup(undefined);
+    }
     
     actions.selectMachine(id);
     if (machine) {

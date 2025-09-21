@@ -45,7 +45,11 @@ const FloorComponent = ({
   
   // Position floors as slices of a cube - closer together for layered look
   const floorY = (floor.level - 3) * 1.5; // Center around 0, 1.5 units apart
-  const shouldShowMachines = isDetailView && isSelected;
+  
+  // Show machines in overview mode for all floors, or in detail view only for selected floor
+  const shouldShowMachines = !isDetailView || (isDetailView && isSelected);
+  
+  console.log(`Floor ${floor.id}: isDetailView=${isDetailView}, isSelected=${isSelected}, shouldShowMachines=${shouldShowMachines}`);
   
   // Cube dimensions
   const cubeSize = 12;
@@ -170,21 +174,31 @@ const FloorComponent = ({
 
     // Machines - only show when in detail view and floor is selected
     shouldShowMachines && React.createElement('group', {},
-      floor.machines.map((machine) => {
-        const isFiltered = !!(filteredMuscleGroup && !machine.muscles.some(muscle => 
-          muscle.toLowerCase().includes(filteredMuscleGroup.toLowerCase()) ||
-          filteredMuscleGroup.toLowerCase().includes(muscle.toLowerCase())
-        ));
-        
-        return React.createElement(FlatGymMachine, {
-          key: machine.id,
-          machine: machine,
-          isSelected: selectedMachine === machine.id,
-          isFiltered: isFiltered,
-          onClick: () => onMachineClick(machine.id),
-          onToggle: () => onMachineToggle(machine.id)
+      (() => {
+        console.log(`Floor ${floor.id}: shouldShowMachines=${shouldShowMachines}, machines count=${floor.machines.length}`);
+        console.log(`Floor ${floor.id} machines:`, floor.machines.map(m => ({ id: m.id, name: m.name })));
+        return floor.machines.map((machine) => {
+          const isFiltered = !!(filteredMuscleGroup && !machine.muscles.some(muscle => 
+            muscle.toLowerCase().includes(filteredMuscleGroup.toLowerCase()) ||
+            filteredMuscleGroup.toLowerCase().includes(muscle.toLowerCase())
+          ));
+          
+          if (isFiltered) {
+            console.log(`Machine ${machine.id} filtered because of muscle group: ${filteredMuscleGroup}, machine muscles: ${machine.muscles.join(', ')}`);
+          }
+          
+          console.log(`Rendering machine ${machine.id} on floor ${floor.id}: filtered=${isFiltered}, selected=${selectedMachine === machine.id}`);
+          
+          return React.createElement(FlatGymMachine, {
+            key: machine.id,
+            machine: machine,
+            isSelected: selectedMachine === machine.id,
+            isFiltered: isFiltered,
+            onClick: () => onMachineClick(machine.id),
+            onToggle: () => onMachineToggle(machine.id)
+          });
         });
-      })
+      })()
     ),
 
     // Machine Dots Visualization - Small dots representing machines on the floor plane

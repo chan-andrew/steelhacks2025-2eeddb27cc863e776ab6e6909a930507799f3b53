@@ -129,17 +129,22 @@ export const useGymState = () => {
   }, []);
 
   const toggleMachineStatus = useCallback((machineId: number) => {
-    setGymState(prev => ({
-      ...prev,
-      floors: prev.floors.map(floor => ({
-        ...floor,
-        machines: floor.machines.map(machine =>
-          machine.id === machineId
-            ? { ...machine, in_use: !machine.in_use }
-            : machine
-        ),
-      })),
-    }));
+    console.log('Toggling machine status for machine:', machineId);
+    setGymState(prev => {
+      const newState = {
+        ...prev,
+        floors: prev.floors.map(floor => ({
+          ...floor,
+          machines: floor.machines.map(machine =>
+            machine.id === machineId
+              ? { ...machine, in_use: !machine.in_use }
+              : machine
+          ),
+        })),
+      };
+      console.log('After toggle, floor machine counts:', newState.floors.map(f => ({ id: f.id, count: f.machines.length })));
+      return newState;
+    });
   }, []);
 
   const selectMachine = useCallback((machineId: number | undefined) => {
@@ -150,6 +155,7 @@ export const useGymState = () => {
     }, []);
 
   const loadMachines = useCallback((machines: Machine[]) => {
+    console.log('Loading machines:', machines.length, 'total machines');
     // Group machines by floor
     const machinesByFloor: { [key: number]: Machine[] } = {};
     machines.forEach(machine => {
@@ -159,27 +165,38 @@ export const useGymState = () => {
       machinesByFloor[machine.floor].push(machine);
     });
 
-    setGymState(prev => ({
-      ...prev,
-      floors: prev.floors.map(floor => ({
-        ...floor,
-        machines: machinesByFloor[floor.id] || []
-      }))
-    }));
+    console.log('Machines grouped by floor:', Object.keys(machinesByFloor).map(id => ({ floor: id, count: machinesByFloor[parseInt(id)].length })));
+
+    setGymState(prev => {
+      const newState = {
+        ...prev,
+        floors: prev.floors.map(floor => ({
+          ...floor,
+          machines: machinesByFloor[floor.id] || []
+        }))
+      };
+      console.log('After loading, floor machine counts:', newState.floors.map(f => ({ id: f.id, count: f.machines.length })));
+      return newState;
+    });
   }, []);
 
   const updateMachineStatus = useCallback((machineId: number, inUse: boolean) => {
-    setGymState(prev => ({
-      ...prev,
-      floors: prev.floors.map(floor => ({
-        ...floor,
-        machines: floor.machines.map(machine =>
-          machine.id === machineId
-            ? { ...machine, in_use: inUse }
-            : machine
-        ),
-      })),
-    }));
+    console.log('Updating machine status:', machineId, 'to', inUse);
+    setGymState(prev => {
+      const newState = {
+        ...prev,
+        floors: prev.floors.map(floor => ({
+          ...floor,
+          machines: floor.machines.map(machine =>
+            machine.id === machineId
+              ? { ...machine, in_use: inUse }
+              : machine
+          ),
+        })),
+      };
+      console.log('After update, floor machine counts:', newState.floors.map(f => ({ id: f.id, count: f.machines.length })));
+      return newState;
+    });
   }, []);
 
   const setFilteredMuscleGroup = useCallback((muscleGroup: string | undefined) => {

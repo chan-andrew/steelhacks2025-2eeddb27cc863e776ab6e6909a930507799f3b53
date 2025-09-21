@@ -15,12 +15,14 @@ interface FlatGymMachineProps {
 }
 
 const getMachineColor = (machine: Machine, isSelected: boolean, isFiltered: boolean = false) => {
-  if (isFiltered) {
-    return '#333333'; // Dark gray for filtered out
-  }
+  console.log(`Machine ${machine.id}: selected=${isSelected}, filtered=${isFiltered}, in_use=${machine.in_use}`);
   
   if (isSelected) {
-    return '#FFD700'; // Gold for selected
+    return '#FFD700'; // Gold for selected (always visible)
+  }
+  
+  if (isFiltered) {
+    return '#666666'; // Darker gray for filtered but still visible
   }
   
   if (machine.in_use) {
@@ -69,7 +71,7 @@ export const FlatGymMachine = ({
       roughness: 0.4,
       metalness: 0.6,
       transparent: true,
-      opacity: isFiltered ? 0.3 : (machine.in_use ? 0.9 : 0.8),
+      opacity: isFiltered ? 0.6 : (machine.in_use ? 0.9 : 0.8), // Make filtered machines more visible
       emissive: machine.in_use ? color : '#000000',
       emissiveIntensity: machine.in_use ? 0.2 : 0,
     });
@@ -109,6 +111,14 @@ export const FlatGymMachine = ({
         <mesh position={[0, -0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.6, 0.8, 32]} />
           <meshBasicMaterial color="#FFD700" transparent opacity={0.6} />
+        </mesh>
+      )}
+
+      {/* Filtered Ring - subtle indicator for filtered machines */}
+      {isFiltered && !isSelected && (
+        <mesh position={[0, -0.005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.5, 0.6, 32]} />
+          <meshBasicMaterial color="#666666" transparent opacity={0.4} />
         </mesh>
       )}
 
