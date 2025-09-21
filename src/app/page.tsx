@@ -222,7 +222,7 @@ export default function Home() {
       {/* Floor Detail Instructions */}
       {isFloorDetailView && selectedFloor && !gymState.isTransitioning && (
         <motion.div
-          className="absolute top-8 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
+          className="fixed top-8 left-0 right-0 z-20 pointer-events-none flex justify-center"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
