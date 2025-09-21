@@ -112,7 +112,7 @@ export const FlatGymMachine = ({
       emissive: color,
       emissiveIntensity: 0.2,
     });
-  }, [color, machine.in_use, isFiltered]);
+  }, [color, isFiltered]);
 
   return (
     <group

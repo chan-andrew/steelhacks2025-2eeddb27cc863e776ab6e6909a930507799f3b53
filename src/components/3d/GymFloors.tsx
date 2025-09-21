@@ -16,6 +16,7 @@ interface GymFloorsProps {
   onMachineToggle: (machineId: number) => void;
   selectedMachine?: number;
   filteredMuscleGroup?: string;
+  filteredMachineType?: string;
 }
 
 const FloorComponent = ({
@@ -27,6 +28,7 @@ const FloorComponent = ({
   onMachineToggle,
   selectedMachine,
   filteredMuscleGroup,
+  filteredMachineType,
 }: {
   floor: GymFloor;
   isSelected: boolean;
@@ -36,6 +38,7 @@ const FloorComponent = ({
   onMachineToggle: (machineId: number) => void;
   selectedMachine?: number;
   filteredMuscleGroup?: string;
+  filteredMachineType?: string;
 }) => {
   const floorRef = useRef<THREE.Group>(null);
   const floorMeshRef = useRef<THREE.Mesh>(null);
@@ -175,10 +178,37 @@ const FloorComponent = ({
       (() => {
         return floor.machines.map((machine) => {
           const isSelected = selectedMachine === machine.id;
-          const isFiltered = !isSelected && !!(filteredMuscleGroup && !machine.muscles.some(muscle => 
-            muscle.toLowerCase().includes(filteredMuscleGroup.toLowerCase()) ||
-            filteredMuscleGroup.toLowerCase().includes(muscle.toLowerCase())
-          ));
+          
+          // Enhanced filtering logic
+          let isFiltered = false;
+          
+          if (!isSelected) {
+            // Check muscle group filtering
+            if (filteredMuscleGroup) {
+              const matchesMuscleGroup = machine.muscles.some(muscle => 
+                muscle.toLowerCase().includes(filteredMuscleGroup.toLowerCase()) ||
+                filteredMuscleGroup.toLowerCase().includes(muscle.toLowerCase())
+              );
+              
+              if (!matchesMuscleGroup) {
+                isFiltered = true;
+              }
+            }
+            
+            // Check machine type filtering (more specific than muscle group)
+            if (filteredMachineType && !isFiltered) {
+              const baseName = machine.name
+                .toLowerCase()
+                .replace(/\s*\d+$/, '') // Remove trailing numbers
+                .replace(/\s*#\d+$/, '') // Remove # numbers
+                .replace(/\s*-\s*\d+$/, '') // Remove - numbers
+                .trim();
+              
+              if (baseName !== filteredMachineType.toLowerCase()) {
+                isFiltered = true;
+              }
+            }
+          }
           
           return React.createElement(FlatGymMachine, {
             key: machine.id,
@@ -229,6 +259,7 @@ export const GymFloors = ({
   onMachineToggle,
   selectedMachine,
   filteredMuscleGroup,
+  filteredMachineType,
 }: GymFloorsProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const isDetailView = currentView.type === 'floor-detail';
@@ -249,7 +280,8 @@ export const GymFloors = ({
           onMachineClick: onMachineClick,
           onMachineToggle: onMachineToggle,
           selectedMachine: selectedMachine,
-          filteredMuscleGroup: filteredMuscleGroup
+          filteredMuscleGroup: filteredMuscleGroup,
+          filteredMachineType: filteredMachineType
         })
       )
   );

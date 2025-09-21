@@ -41,6 +41,7 @@ export interface GymState {
   isTransitioning: boolean;
   selectedMachine?: number;
   filteredMuscleGroup?: string;
+  filteredMachineType?: string;
   currentPosition?: { floor: number; x: number; y: number };
 }
 

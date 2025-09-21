@@ -138,6 +138,7 @@ export const GymFloorVisualization = ({
             onMachineToggle={onMachineToggle}
             selectedMachine={gymState.selectedMachine}
             filteredMuscleGroup={gymState.filteredMuscleGroup}
+            filteredMachineType={gymState.filteredMachineType}
           />
 
           {/* Environment */}

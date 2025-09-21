@@ -93,6 +93,10 @@ export default function Home() {
     actions.setFilteredMuscleGroup(muscleGroup);
   };
 
+  const handleMachineTypeSelect = (machineType: string | undefined) => {
+    actions.setFilteredMachineType(machineType);
+  };
+
   const handleMachineSelect = (machineId: number | Machine) => {
     const id = typeof machineId === 'number' ? machineId : machineId.id;
     const machine = typeof machineId === 'number' 
@@ -172,8 +176,10 @@ export default function Home() {
       <MuscleSidebar
         machines={allMachines}
         onMuscleGroupSelect={handleMuscleGroupSelect}
+        onMachineTypeSelect={handleMachineTypeSelect}
         onMachineSelect={(machine) => handleMachineSelect(machine)}
         selectedMuscleGroup={gymState.filteredMuscleGroup}
+        selectedMachineType={gymState.filteredMachineType}
         selectedMachine={selectedMachine}
       />
 

@@ -8,8 +8,10 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 interface MuscleSidebarProps {
   machines: Machine[];
   onMuscleGroupSelect: (muscleGroup: string | undefined) => void;
+  onMachineTypeSelect: (machineType: string | undefined) => void;
   onMachineSelect: (machine: Machine) => void;
   selectedMuscleGroup?: string;
+  selectedMachineType?: string;
   selectedMachine?: Machine;
   className?: string;
 }
@@ -32,12 +34,18 @@ const MUSCLE_GROUPS = [
 export const MuscleSidebar = ({
   machines,
   onMuscleGroupSelect,
+  onMachineTypeSelect,
   onMachineSelect,
   selectedMuscleGroup,
+  selectedMachineType: propSelectedMachineType,
   selectedMachine,
   className = ''
 }: MuscleSidebarProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [localSelectedMachineType, setLocalSelectedMachineType] = useState<string | undefined>(undefined);
+  
+  // Use prop value if available, otherwise use local state
+  const selectedMachineType = propSelectedMachineType ?? localSelectedMachineType;
 
   const muscleGroupData: MuscleGroup[] = useMemo(() => {
     return MUSCLE_GROUPS.map(group => {
@@ -64,14 +72,66 @@ export const MuscleSidebar = ({
     return group ? group.machines : [];
   }, [selectedMuscleGroup, muscleGroupData]);
 
+  // Group machines by their base name (e.g., "pec deck", "treadmill")
+  const machineTypeGroups = useMemo(() => {
+    if (!selectedGroupMachines.length) return [];
+    
+    const typeMap = new Map<string, Machine[]>();
+    
+    selectedGroupMachines.forEach(machine => {
+      // Extract base machine type by removing numbers and extra descriptors
+      const baseName = machine.name
+        .toLowerCase()
+        .replace(/\s*\d+$/, '') // Remove trailing numbers
+        .replace(/\s*#\d+$/, '') // Remove # numbers
+        .replace(/\s*-\s*\d+$/, '') // Remove - numbers
+        .trim();
+      
+      if (!typeMap.has(baseName)) {
+        typeMap.set(baseName, []);
+      }
+      typeMap.get(baseName)!.push(machine);
+    });
+    
+    return Array.from(typeMap.entries()).map(([typeName, machines]) => ({
+      name: typeName,
+      machines: machines,
+      availableCount: machines.filter(m => !m.in_use).length
+    }));
+  }, [selectedGroupMachines]);
+
+  const selectedTypeMachines = useMemo(() => {
+    if (!selectedMachineType) return [];
+    const typeGroup = machineTypeGroups.find(g => g.name === selectedMachineType);
+    return typeGroup ? typeGroup.machines : [];
+  }, [selectedMachineType, machineTypeGroups]);
+
   const handleMuscleGroupClick = (group: string) => {
     const newSelection = selectedMuscleGroup === group ? undefined : group;
     onMuscleGroupSelect(newSelection);
+    setLocalSelectedMachineType(undefined); // Reset machine type selection
+    onMachineTypeSelect(undefined); // Notify parent
+  };
+
+  const handleMachineTypeClick = (typeName: string) => {
+    setLocalSelectedMachineType(typeName);
+    onMachineTypeSelect(typeName); // Notify parent
   };
 
   const handleMachineClick = (machine: Machine) => {
     onMachineSelect(machine);
     setIsOpen(false); // Close sidebar when machine is selected
+  };
+
+  const handleBackToMuscleGroups = () => {
+    onMuscleGroupSelect(undefined);
+    setLocalSelectedMachineType(undefined);
+    onMachineTypeSelect(undefined); // Notify parent
+  };
+
+  const handleBackToMachineTypes = () => {
+    setLocalSelectedMachineType(undefined);
+    onMachineTypeSelect(undefined); // Notify parent
   };
 
   return (
@@ -124,9 +184,9 @@ export const MuscleSidebar = ({
                   </button>
                 </div>
 
-                {/* Content */}
+                {/* Content - Three Level Navigation */}
                 {!selectedMuscleGroup ? (
-                  /* Muscle Groups List */
+                  /* Level 1: Muscle Groups List */
                   <div className="space-y-2">
                     {muscleGroupData.map((group) => (
                       <motion.button
@@ -147,12 +207,12 @@ export const MuscleSidebar = ({
                       </motion.button>
                     ))}
                   </div>
-                ) : (
-                  /* Machine List */
+                ) : !selectedMachineType ? (
+                  /* Level 2: Machine Types List */
                   <div className="space-y-2">
                     {/* Back Button */}
                     <motion.button
-                      onClick={() => onMuscleGroupSelect(undefined)}
+                      onClick={handleBackToMuscleGroups}
                       className="w-full p-3 text-left rounded-lg glass-effect hover:bg-white hover:bg-opacity-10 transition-all duration-200 mb-4"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -162,11 +222,49 @@ export const MuscleSidebar = ({
 
                     {/* Selected Group Title */}
                     <h3 className="text-lg font-semibold text-primary-white mb-4">
-                      {selectedMuscleGroup} Machines
+                      {selectedMuscleGroup} Equipment
                     </h3>
 
-                    {/* Machines */}
-                    {selectedGroupMachines.map((machine) => (
+                    {/* Machine Types */}
+                    {machineTypeGroups.map((typeGroup) => (
+                      <motion.button
+                        key={typeGroup.name}
+                        onClick={() => handleMachineTypeClick(typeGroup.name)}
+                        className="w-full p-3 text-left rounded-lg glass-effect hover:bg-white hover:bg-opacity-10 transition-all duration-200"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-primary-white font-medium capitalize">
+                            {typeGroup.name}
+                          </span>
+                          <span className="text-accent-gold text-sm">
+                            {typeGroup.availableCount}/{typeGroup.machines.length}
+                          </span>
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
+                ) : (
+                  /* Level 3: Individual Machines List */
+                  <div className="space-y-2">
+                    {/* Back Button */}
+                    <motion.button
+                      onClick={handleBackToMachineTypes}
+                      className="w-full p-3 text-left rounded-lg glass-effect hover:bg-white hover:bg-opacity-10 transition-all duration-200 mb-4"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <span className="text-accent-gold">← Back to Equipment Types</span>
+                    </motion.button>
+
+                    {/* Selected Type Title */}
+                    <h3 className="text-lg font-semibold text-primary-white mb-4 capitalize">
+                      {selectedMachineType}
+                    </h3>
+
+                    {/* Individual Machines */}
+                    {selectedTypeMachines.map((machine) => (
                       <motion.div
                         key={machine.id}
                         className={`p-3 rounded-lg glass-effect ${

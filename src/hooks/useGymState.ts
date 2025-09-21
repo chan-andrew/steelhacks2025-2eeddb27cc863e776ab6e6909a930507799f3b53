@@ -188,7 +188,15 @@ export const useGymState = () => {
   const setFilteredMuscleGroup = useCallback((muscleGroup: string | undefined) => {
     setGymState(prev => ({
       ...prev,
-      filteredMuscleGroup: muscleGroup
+      filteredMuscleGroup: muscleGroup,
+      filteredMachineType: undefined // Reset machine type when muscle group changes
+    }));
+  }, []);
+
+  const setFilteredMachineType = useCallback((machineType: string | undefined) => {
+    setGymState(prev => ({
+      ...prev,
+      filteredMachineType: machineType
     }));
   }, []);
 
@@ -229,6 +237,7 @@ export const useGymState = () => {
       loadMachines,
       updateMachineStatus,
       setFilteredMuscleGroup,
+      setFilteredMachineType,
       setCurrentPosition,
     },
   };
