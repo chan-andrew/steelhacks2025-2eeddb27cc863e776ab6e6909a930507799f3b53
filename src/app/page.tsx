@@ -160,7 +160,7 @@ export default function Home() {
         <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none">
           <div className="text-center">
             <h1 className="text-4xl font-bold mb-2 text-primary-white">
-              Gym Floor Planner
+              StairMastered
             </h1>
             <p className="text-primary-white/70 text-lg">Tap a floor to explore</p>
           </div>
