@@ -128,24 +128,27 @@ export const useGymState = () => {
     }, 1200);
   }, []);
 
-  const toggleMachineStatus = useCallback((machineId: string) => {
-    setGymState(prev => ({
-      ...prev,
-      floors: prev.floors.map(floor => ({
-        ...floor,
-        machines: floor.machines.map(machine =>
-          machine._id === machineId
-            ? { ...machine, in_use: !machine.in_use }
-            : machine
-        ),
-      })),
-    }));
+  const toggleMachineStatus = useCallback((machineId: number) => {
+    setGymState(prev => {
+      const newState = {
+        ...prev,
+        floors: prev.floors.map(floor => ({
+          ...floor,
+          machines: floor.machines.map(machine =>
+            machine.id === machineId
+              ? { ...machine, in_use: !machine.in_use }
+              : machine
+          ),
+        })),
+      };
+      return newState;
+    });
   }, []);
 
-  const selectMachine = useCallback((machineId: string | undefined) => {
+  const selectMachine = useCallback((machineId: number | undefined) => {
     setGymState(prev => ({
       ...prev,
-      selectedMachine: machineId === undefined ? undefined : (prev.selectedMachine === machineId ? undefined : machineId),
+      selectedMachine: machineId,
     }));
   }, []);
 
@@ -156,12 +159,7 @@ export const useGymState = () => {
       if (!machinesByFloor[machine.floor]) {
         machinesByFloor[machine.floor] = [];
       }
-      machinesByFloor[machine.floor].push({
-        ...machine,
-        position: [(machine.x - 10) * 1.5, 0, (machine.y - 10) * 1.5] as [number, number, number],
-        rotation: [0, 0, 0] as [number, number, number],
-        dimensions: [0.8, 0.1, 0.8] as [number, number, number]
-      });
+      machinesByFloor[machine.floor].push(machine);
     });
 
     setGymState(prev => ({
@@ -173,13 +171,13 @@ export const useGymState = () => {
     }));
   }, []);
 
-  const updateMachineStatus = useCallback((machineId: string, inUse: boolean) => {
+  const updateMachineStatus = useCallback((machineId: number, inUse: boolean) => {
     setGymState(prev => ({
       ...prev,
       floors: prev.floors.map(floor => ({
         ...floor,
         machines: floor.machines.map(machine =>
-          machine._id === machineId
+          machine.id === machineId
             ? { ...machine, in_use: inUse }
             : machine
         ),
@@ -212,7 +210,7 @@ export const useGymState = () => {
     if (!gymState.selectedMachine) return undefined;
     
     for (const floor of gymState.floors) {
-      const machine = floor.machines.find(m => m._id === gymState.selectedMachine);
+      const machine = floor.machines.find(m => m.id === gymState.selectedMachine);
       if (machine) return machine;
     }
     return undefined;

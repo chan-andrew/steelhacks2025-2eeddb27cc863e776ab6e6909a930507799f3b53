@@ -8,7 +8,10 @@ export async function GET() {
   const client = await clientPromise;
   const db = client.db(process.env.MONGODB_DB);
 
-  const changeStream = db.collection("Machines").watch();
+  // Watch with fullDocument option to get the complete document with the machine's id field
+  const changeStream = db.collection("Machines").watch([], { 
+    fullDocument: 'updateLookup' 
+  });
 
   // Create a ReadableStream to push events to client
   const stream = new ReadableStream({

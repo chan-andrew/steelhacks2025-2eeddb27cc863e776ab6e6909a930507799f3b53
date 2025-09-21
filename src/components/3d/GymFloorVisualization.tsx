@@ -8,30 +8,40 @@ import { GymFloors } from './GymFloors';
 import { CameraController } from './CameraController';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { TouchGestureOverlay } from '../ui/TouchGestureOverlay';
-import { useGymState } from '@/hooks/useGymState';
 import { useMobileOptimization } from '@/hooks/useMobileOptimization';
-import { TouchGesture } from '@/types/gym';
+import { TouchGesture, GymState } from '@/types/gym';
 import * as THREE from 'three';
 
 interface GymFloorVisualizationProps {
   className?: string;
+  gymState: GymState;
+  onFloorSelect: (floorId: number) => void;
+  onMachineSelect: (machineId: number) => void;
+  onMachineToggle: (machineId: number) => void;
+  onReturnToOverview: () => void;
 }
 
-export const GymFloorVisualization = ({ className = '' }: GymFloorVisualizationProps) => {
-  const { gymState, actions } = useGymState();
+export const GymFloorVisualization = ({ 
+  className = '',
+  gymState,
+  onFloorSelect,
+  onMachineSelect,
+  onMachineToggle,
+  onReturnToOverview
+}: GymFloorVisualizationProps) => {
   const mobileOpt = useMobileOptimization();
   const controlsRef = useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
   const cameraRef = useRef<THREE.PerspectiveCamera>(null);
 
   const handleFloorClick = (floorId: number) => {
     if (gymState.currentView.type === 'overview') {
-      actions.selectFloor(floorId);
+      onFloorSelect(floorId);
     }
   };
 
   const handleBackgroundClick = () => {
     if (gymState.currentView.type === 'floor-detail') {
-      actions.returnToOverview();
+      onReturnToOverview();
     }
   };
 
@@ -124,8 +134,8 @@ export const GymFloorVisualization = ({ className = '' }: GymFloorVisualizationP
             currentView={gymState.currentView}
             isTransitioning={gymState.isTransitioning}
             onFloorClick={handleFloorClick}
-            onMachineClick={actions.selectMachine}
-            onMachineToggle={actions.toggleMachineStatus}
+            onMachineClick={onMachineSelect}
+            onMachineToggle={onMachineToggle}
             selectedMachine={gymState.selectedMachine}
             filteredMuscleGroup={gymState.filteredMuscleGroup}
           />

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Box, Text } from '@react-three/drei';
 import * as THREE from 'three';
@@ -15,31 +15,20 @@ interface FlatGymMachineProps {
 }
 
 const getMachineColor = (machine: Machine, isSelected: boolean, isFiltered: boolean = false) => {
+  if (isSelected) {
+    return '#FFD700'; // Gold for selected (always visible)
+  }
+  
+  if (isFiltered) {
+    return '#666666'; // Darker gray for filtered but still visible
+  }
+  
   if (machine.in_use) {
     return '#FF0000'; // Red for in use
   }
   
-  if (isSelected) {
-    return '#FFD700'; // Gold for selected
-  }
-  
-  if (isFiltered) {
-    return '#333333'; // Dark gray for filtered out
-  }
-  
-  // Default colors based on muscle group
-  const primaryMuscle = machine.muscles[0]?.toLowerCase() || '';
-  
-  if (primaryMuscle.includes('cardio')) return '#00CED1';
-  if (primaryMuscle.includes('chest')) return '#4169E1';
-  if (primaryMuscle.includes('back') || primaryMuscle.includes('lats')) return '#32CD32';
-  if (primaryMuscle.includes('shoulder')) return '#FF6347';
-  if (primaryMuscle.includes('biceps') || primaryMuscle.includes('triceps')) return '#9370DB';
-  if (primaryMuscle.includes('quads') || primaryMuscle.includes('hamstrings') || primaryMuscle.includes('glutes')) return '#FFB347';
-  if (primaryMuscle.includes('calves')) return '#20B2AA';
-  if (primaryMuscle.includes('abs')) return '#FF69B4';
-  
-  return '#CCCCCC'; // Default gray
+  // Green for available machines
+  return '#00FF00';
 };
 
 export const FlatGymMachine = ({ 
@@ -54,17 +43,32 @@ export const FlatGymMachine = ({
   
   const color = getMachineColor(machine, isSelected, isFiltered);
 
-  // Convert grid coordinates to 3D position (16x16 grid, coordinates 4-16)
-  const position: [number, number, number] = [
-    (machine.x - 10) * 1.5, // Center around 0, spread out
-    0.05, // Slightly above floor
-    (machine.y - 10) * 1.5
-  ];
+  // Use the pre-calculated position from the machine object
+  const position: [number, number, number] = useMemo(() => 
+    machine.position || [
+      (machine.x - 10) / 2, // Fallback calculation
+      0.05, // Slightly above floor
+      (machine.y - 10) / 2
+    ], [machine.position, machine.x, machine.y]
+  );
+
+  // Ensure position is reset when selection changes
+  useEffect(() => {
+    if (machineRef.current && !isSelected) {
+      machineRef.current.position.y = position[1];
+    }
+  }, [isSelected, position]);
 
   // Animate selected machines
   useFrame((state) => {
-    if (machineRef.current && isSelected) {
-      machineRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 3) * 0.05;
+    if (machineRef.current) {
+      if (isSelected) {
+        // Animate position when selected
+        machineRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 3) * 0.05;
+      } else {
+        // Reset to original position when not selected
+        machineRef.current.position.y = position[1];
+      }
     }
 
     // Pulsing effect for in-use machines
@@ -80,7 +84,7 @@ export const FlatGymMachine = ({
       roughness: 0.4,
       metalness: 0.6,
       transparent: true,
-      opacity: isFiltered ? 0.3 : (machine.in_use ? 0.9 : 0.8),
+      opacity: isFiltered ? 0.6 : (machine.in_use ? 0.9 : 0.8), // Make filtered machines more visible
       emissive: machine.in_use ? color : '#000000',
       emissiveIntensity: machine.in_use ? 0.2 : 0,
     });
@@ -120,6 +124,14 @@ export const FlatGymMachine = ({
         <mesh position={[0, -0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.6, 0.8, 32]} />
           <meshBasicMaterial color="#FFD700" transparent opacity={0.6} />
+        </mesh>
+      )}
+
+      {/* Filtered Ring - subtle indicator for filtered machines */}
+      {isFiltered && !isSelected && (
+        <mesh position={[0, -0.005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.5, 0.6, 32]} />
+          <meshBasicMaterial color="#666666" transparent opacity={0.4} />
         </mesh>
       )}
 
