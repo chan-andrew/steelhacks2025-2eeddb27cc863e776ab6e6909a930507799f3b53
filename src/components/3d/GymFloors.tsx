@@ -156,20 +156,6 @@ const FloorComponent = ({
       React.createElement('primitive', { object: edgesMaterial })
     ),
 
-    // Floor Number Label
-    isDetailView && (
-      <Text
-        position={[cubeSize/2 + 1, 0, 0]}
-        rotation={[0, -Math.PI / 2, 0]}
-        fontSize={1}
-        color={isSelected ? "#FFD700" : "#FFFFFF"}
-        anchorX="center"
-        anchorY="middle"
-      >
-        {`Floor ${floor.id}`}
-      </Text>
-    ),
-
     // Floor Label Behind - Always visible "Floor #" text behind the floor
     <Text
       position={[cubeSize/2 + 1.5, 0.05, 0]} // Position on the x=16 side (back edge)

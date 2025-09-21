@@ -8,13 +8,14 @@ import { Machine } from '@/types/gym';
 import { getMachineIcon } from '@/utils/iconMapping';
 
 // Component to display machine icon
-const MachineIcon = ({ iconPath, position }: { iconPath: string; position: [number, number, number] }) => {
+const MachineIcon = ({ iconPath, position, isDetailView = false }: { iconPath: string; position: [number, number, number]; isDetailView?: boolean }) => {
   try {
     const texture = useLoader(THREE.TextureLoader, iconPath);
+    const iconSize = isDetailView ? 1.6 : 1.2; // Bigger icon in detail view
     
     return (
       <mesh position={position} rotation={[-Math.PI / 2, 0, 3 * Math.PI / 2]}>
-        <planeGeometry args={[1.2, 1.2]} />
+        <planeGeometry args={[iconSize, iconSize]} />
         <meshBasicMaterial 
           map={texture} 
           transparent 
@@ -35,6 +36,7 @@ interface FlatGymMachineProps {
   machine: Machine;
   isSelected: boolean;
   isFiltered?: boolean;
+  isDetailView?: boolean;
   onClick: () => void;
   onToggle: () => void;
 }
@@ -60,6 +62,7 @@ export const FlatGymMachine = ({
   machine, 
   isSelected, 
   isFiltered = false,
+  isDetailView = false,
   onClick, 
   onToggle 
 }: FlatGymMachineProps) => {
@@ -137,7 +140,7 @@ export const FlatGymMachine = ({
       {/* Flat Machine Icon - very thin box with rounded corners */}
       <RoundedBox
         ref={iconRef}
-        args={[1.4, 0.1, 1.4]} // Even bigger flat icon dimensions
+        args={isDetailView ? [2.0, 0.15, 2.0] : [1.4, 0.1, 1.4]} // Bigger in detail view
         radius={0.05} // Small rounded corners
         smoothness={4} // Smoothness of the rounded corners
         material={machineMaterial}
@@ -150,6 +153,7 @@ export const FlatGymMachine = ({
         <MachineIcon 
           iconPath={iconPath} 
           position={[0, 0.06, 0]} // Slightly above the machine box
+          isDetailView={isDetailView}
         />
       )}
 
