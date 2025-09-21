@@ -153,6 +153,20 @@ export const FlatGymMachine = ({
         />
       )}
 
+      {/* Machine Name Label - Always visible in front of the machine */}
+      <Text
+        position={[-1.0, 0.15, 0]} // Moved 90 degrees to the left (negative x-axis)
+        fontSize={0.16}
+        color="#FFFFFF"
+        anchorX="center"
+        anchorY="middle"
+        rotation={[-Math.PI / 2, 0, -Math.PI / 2]} // Rotate to face upward and text 90 degrees to the right
+        outlineWidth={0.02}
+        outlineColor="#000000"
+      >
+        {machine.name}
+      </Text>
+
       {/* Selection Ring */}
       {isSelected && (
         <mesh position={[0, -0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
