@@ -96,7 +96,6 @@ export const GymFloorVisualization = ({
             targetState={gymState.currentView.cameraState}
             isTransitioning={gymState.isTransitioning}
             transitionDuration={1200}
-            viewType={gymState.currentView.type}
           />
 
           {/* Lighting */}

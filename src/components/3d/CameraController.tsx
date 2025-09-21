@@ -10,14 +10,12 @@ interface CameraControllerProps {
   targetState: CameraState;
   isTransitioning: boolean;
   transitionDuration: number;
-  viewType?: 'overview' | 'floor-detail';
 }
 
 export const CameraController = ({ 
   targetState, 
   isTransitioning,
-  transitionDuration = 1200,
-  viewType = 'overview'
+  transitionDuration = 1200
 }: CameraControllerProps) => {
   const { camera } = useThree();
   const startTime = useRef<number>(0);
@@ -79,45 +77,13 @@ export const CameraController = ({
     }
   });
 
-  // Different constraints based on view type
-  const getConstraints = () => {
-    if (viewType === 'floor-detail') {
-      return {
-        minPolarAngle: Math.PI / 8, // More restrictive - can't go too low
-        maxPolarAngle: Math.PI / 2, // Allow more top-down view
-        minAzimuthAngle: -Math.PI, // Full rotation for detail view
-        maxAzimuthAngle: Math.PI,
-        minDistance: 5,
-        maxDistance: 50,
-      };
-    } else {
-      // Overview mode constraints
-      return {
-        minPolarAngle: Math.PI / 6, // Prevent camera from going too low (30 degrees)
-        maxPolarAngle: Math.PI / 2.5, // Prevent camera from going too high (72 degrees)
-        minAzimuthAngle: -Math.PI / 4, // Limit left rotation (45 degrees left)
-        maxAzimuthAngle: Math.PI / 1.2, // Allow much more right rotation (150 degrees right)
-        minDistance: 12,
-        maxDistance: 30,
-      };
-    }
-  };
-
-  const constraints = getConstraints();
-
   return (
     <OrbitControls
       ref={controlsRef}
       target={targetState.target}
-      enablePan={false} // Disable panning to keep camera focused
+      enablePan={true} // Enable panning for full camera control
       enableZoom={true}
       enableRotate={!isTransitioning} // Disable rotation during transitions
-      minPolarAngle={constraints.minPolarAngle}
-      maxPolarAngle={constraints.maxPolarAngle}
-      minAzimuthAngle={constraints.minAzimuthAngle}
-      maxAzimuthAngle={constraints.maxAzimuthAngle}
-      minDistance={constraints.minDistance}
-      maxDistance={constraints.maxDistance}
       enableDamping
       dampingFactor={0.05}
     />
