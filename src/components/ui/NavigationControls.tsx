@@ -6,21 +6,19 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 interface NavigationControlsProps {
   showBackButton: boolean;
   onBack: () => void;
-  selectedFloor?: number;
   className?: string;
 }
 
 export const NavigationControls = ({
   showBackButton,
   onBack,
-  selectedFloor,
   className = '',
 }: NavigationControlsProps) => {
   if (!showBackButton) return null;
 
   return (
     <motion.div
-      className={`fixed top-4 left-16 z-10 flex flex-col gap-2 ${className}`}
+      className={`fixed top-4 left-24 z-10 flex flex-col gap-2 ${className}`}
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
@@ -37,19 +35,6 @@ export const NavigationControls = ({
       >
         <ArrowLeftIcon className="w-6 h-6" />
       </motion.button>
-
-      {/* Floor Indicator */}
-      {selectedFloor && (
-        <motion.div
-          className="glass-effect px-3 py-2 rounded-xl text-center"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <div className="text-xs text-primary-white/70">Floor</div>
-          <div className="text-lg font-bold text-accent-gold">{selectedFloor}</div>
-        </motion.div>
-      )}
     </motion.div>
   );
 };

@@ -3,13 +3,12 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Machine, MuscleGroup } from '@/types/gym';
-import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 
 interface MuscleSidebarProps {
   machines: Machine[];
   onMuscleGroupSelect: (muscleGroup: string | undefined) => void;
   onMachineSelect: (machine: Machine) => void;
-  onFindClosest: (machine: Machine) => void;
   selectedMuscleGroup?: string;
   selectedMachine?: Machine;
   className?: string;
@@ -34,7 +33,6 @@ export const MuscleSidebar = ({
   machines,
   onMuscleGroupSelect,
   onMachineSelect,
-  onFindClosest,
   selectedMuscleGroup,
   selectedMachine,
   className = ''
@@ -73,11 +71,7 @@ export const MuscleSidebar = ({
 
   const handleMachineClick = (machine: Machine) => {
     onMachineSelect(machine);
-  };
-
-  const handleFindClosest = (machine: Machine) => {
-    onFindClosest(machine);
-    setIsOpen(false);
+    setIsOpen(false); // Close sidebar when machine is selected
   };
 
   return (
@@ -195,15 +189,6 @@ export const MuscleSidebar = ({
                             machine.in_use ? 'bg-red-500' : 'bg-green-500'
                           }`} />
                         </div>
-                        
-                        {/* Find Closest Button */}
-                        <button
-                          onClick={() => handleFindClosest(machine)}
-                          className="w-full mt-2 p-2 text-sm rounded bg-accent-gold bg-opacity-20 text-accent-gold hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center gap-2"
-                        >
-                          <MagnifyingGlassIcon className="w-4 h-4" />
-                          Find Closest Machine
-                        </button>
                       </motion.div>
                     ))}
                   </div>

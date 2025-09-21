@@ -99,10 +99,15 @@ export default function Home() {
       ? allMachines.find(m => m.id === machineId)
       : machineId;
     
-    // Just select the machine - don't clear filters
-    actions.selectMachine(id);
     if (machine) {
+      // Navigate to the machine's floor first
+      actions.selectFloor(machine.floor);
+      // Set current position
       actions.setCurrentPosition({ floor: machine.floor, x: machine.x, y: machine.y });
+      // Then select the machine after the floor transition
+      setTimeout(() => {
+        actions.selectMachine(id);
+      }, 1200); // Wait for floor transition to complete
     }
   };
 
@@ -133,36 +138,6 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Error toggling machine status:', error);
-    }
-  };
-
-  const handleFindClosest = async (machine: Machine) => {
-    try {
-      const currentPos = gymState.currentPosition || { floor: 5, x: 0, y: 0 };
-
-      const response = await fetch('/api/find-closest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          machineName: machine.name,
-          currentPosition: currentPos,
-        }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.nearest) {
-          const closestMachine = allMachines.find(m => m.id === result.nearest.id);
-          if (closestMachine) {
-            actions.selectFloor(closestMachine.floor);
-            setTimeout(() => {
-              actions.selectMachine(closestMachine.id);
-            }, 1200);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error finding closest machine:', error);
     }
   };
 
@@ -198,7 +173,6 @@ export default function Home() {
         machines={allMachines}
         onMuscleGroupSelect={handleMuscleGroupSelect}
         onMachineSelect={(machine) => handleMachineSelect(machine)}
-        onFindClosest={handleFindClosest}
         selectedMuscleGroup={gymState.filteredMuscleGroup}
         selectedMachine={selectedMachine}
       />
@@ -207,7 +181,6 @@ export default function Home() {
       <NavigationControls
         showBackButton={showBackButton}
         onBack={actions.returnToOverview}
-        selectedFloor={selectedFloor?.id}
       />
 
       {/* Machine Status Panel */}
