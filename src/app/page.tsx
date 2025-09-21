@@ -1,0 +1,247 @@
+'use client';
+
+import React, { Suspense, useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { ClientOnly3D } from '@/components/ClientOnly3D';
+import { NavigationControls } from '@/components/ui/NavigationControls';
+import { MachineStatusPanel } from '@/components/ui/MachineStatusPanel';
+import { EquipmentLegend } from '@/components/ui/EquipmentLegend';
+import { EnhancedFloorScrollBar } from '@/components/ui/EnhancedFloorScrollBar';
+import { MuscleSidebar } from '@/components/ui/MuscleSidebar';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner'; // fixed import
+import { useGymState } from '@/hooks/useGymState';
+import { Machine, MachineUpdateMessage } from '@/types/gym';
+
+export default function Home() {
+  const { gymState, selectedFloor, selectedMachine, actions } = useGymState();
+  const [allMachines, setAllMachines] = useState<Machine[]>([]);
+
+  const isFloorDetailView = gymState.currentView.type === 'floor-detail';
+  const showBackButton = isFloorDetailView;
+
+  // Load machines from API
+  useEffect(() => {
+    const loadMachines = async () => {
+      try {
+        const response = await fetch('/api/machines');
+        if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+        const machines: Machine[] = await response.json();
+        setAllMachines(machines);
+        actions.loadMachines(machines);
+      } catch (error) {
+        console.error('Error loading machines:', error);
+      }
+    };
+
+    loadMachines();
+  }, [actions]);
+
+  // Handle real-time updates
+  useEffect(() => {
+    const eventSource = new EventSource('/api/stream');
+
+    eventSource.onmessage = (event: MessageEvent) => {
+      try {
+        const data: MachineUpdateMessage = JSON.parse(event.data);
+        console.log('Machine change:', data);
+
+        if (
+          data.operationType === 'update' &&
+          data.updateDescription?.updatedFields?.in_use !== undefined
+        ) {
+          const machineId = data.documentKey._id;
+          const newInUseStatus = data.updateDescription.updatedFields.in_use;
+
+          // Update local state
+          setAllMachines(prev =>
+            prev.map(machine =>
+              machine._id === machineId
+                ? { ...machine, in_use: newInUseStatus }
+                : machine
+            )
+          );
+
+          // Update gym state
+          actions.updateMachineStatus(machineId, newInUseStatus);
+        }
+      } catch (error) {
+        console.error('Error parsing machine update:', error);
+      }
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [actions]);
+
+  const handleMuscleGroupSelect = (muscleGroup: string | undefined) => {
+    actions.setFilteredMuscleGroup(muscleGroup);
+  };
+
+  const handleMachineSelect = (machine: Machine) => {
+    actions.selectMachine(machine._id);
+    actions.setCurrentPosition({ floor: machine.floor, x: machine.x, y: machine.y });
+  };
+
+  const handleFindClosest = async (machine: Machine) => {
+    try {
+      const currentPos = gymState.currentPosition || { floor: 5, x: 0, y: 0 };
+
+      const response = await fetch('/api/find-closest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          machineName: machine.name,
+          currentPosition: currentPos,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.nearest) {
+          const closestMachine = allMachines.find(m => m._id === result.nearest._id);
+          if (closestMachine) {
+            actions.selectFloor(closestMachine.floor);
+            setTimeout(() => {
+              actions.selectMachine(closestMachine._id);
+            }, 1200);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error finding closest machine:', error);
+    }
+  };
+
+  return (
+    <main className="w-screen
+     h-screen bg-black overflow-hidden relative">
+      {/* Title */}
+      {!isFloorDetailView && (
+        <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold mb-2 text-primary-white">
+              Gym Floor Planner
+            </h1>
+            <p className="text-primary-white/70 text-lg">Tap a floor to explore</p>
+          </div>
+        </div>
+      )}
+
+      {/* 3D Visualization - Client-side only */}
+      <Suspense fallback={<LoadingSpinner />}>
+        <ClientOnly3D className="w-full h-full" />
+      </Suspense>
+
+      {/* Muscle Sidebar */}
+      <MuscleSidebar
+        machines={allMachines}
+        onMuscleGroupSelect={handleMuscleGroupSelect}
+        onMachineSelect={handleMachineSelect}
+        onFindClosest={handleFindClosest}
+        selectedMuscleGroup={gymState.filteredMuscleGroup}
+        selectedMachine={selectedMachine}
+      />
+
+      {/* Navigation Controls */}
+      <NavigationControls
+        showBackButton={showBackButton}
+        onBack={actions.returnToOverview}
+        selectedFloor={selectedFloor?.id}
+      />
+
+      {/* Machine Status Panel */}
+      {selectedMachine && (
+        <MachineStatusPanel
+          machine={selectedMachine}
+          onToggleStatus={() => actions.toggleMachineStatus(selectedMachine._id)}
+          onClose={() => actions.selectMachine(undefined)} // fixed close
+        />
+      )}
+
+      {/* Legend */}
+      {!isFloorDetailView && (
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
+          <div className="flex items-center gap-6 text-sm text-white/70">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-white"></div>
+              <span>Cardio</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-white/70"></div>
+              <span>Strength</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-white/40"></div>
+              <span>Free Weights</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floor Detail Instructions */}
+      {isFloorDetailView && selectedFloor && !gymState.isTransitioning && (
+        <motion.div
+          className="absolute top-20 left-1/2 transform -translate-x-1/2 pointer-events-none"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.4,
+            delay: 1.0,
+            ease: [0.25, 0.46, 0.45, 0.94],
+          }}
+        >
+          <div className="glass-effect p-4 rounded-xl text-center">
+            <motion.h2
+              className="text-lg font-semibold text-primary-white mb-1"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                duration: 0.3,
+                delay: 1.1,
+                ease: [0.25, 0.46, 0.45, 0.94],
+              }}
+            >
+              {selectedFloor.name}
+            </motion.h2>
+            <motion.p
+              className="text-primary-white/70 text-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                duration: 0.3,
+                delay: 1.2,
+                ease: [0.25, 0.46, 0.45, 0.94],
+              }}
+            >
+              Tap machines to view details • Double-tap to toggle status
+            </motion.p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Equipment Legend */}
+      <EquipmentLegend show={isFloorDetailView && !gymState.isTransitioning} />
+
+      {/* Floor Scroll Bar */}
+      <EnhancedFloorScrollBar
+        totalFloors={5}
+        currentFloor={selectedFloor?.id}
+        onFloorSelect={actions.selectFloor}
+        isInDetailView={isFloorDetailView}
+      />
+
+      {/* Development Info */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="absolute bottom-4 right-4 glass-effect p-2 rounded-lg text-xs text-primary-white/70">
+          <div>View: {gymState.currentView.type}</div>
+          <div>Floors: {gymState.floors.length}</div>
+          <div>Machines: {allMachines.length}</div>
+          {gymState.filteredMuscleGroup && (
+            <div>Filter: {gymState.filteredMuscleGroup}</div>
+          )}
+        </div>
+      )}
+    </main>
+  );
+}
