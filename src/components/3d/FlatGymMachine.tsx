@@ -13,13 +13,14 @@ const MachineIcon = ({ iconPath, position }: { iconPath: string; position: [numb
     const texture = useLoader(THREE.TextureLoader, iconPath);
     
     return (
-      <mesh position={position} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh position={position} rotation={[-Math.PI / 2, 0, 3 * Math.PI / 2]}>
         <planeGeometry args={[0.6, 0.6]} />
         <meshBasicMaterial 
           map={texture} 
           transparent 
           alphaTest={0.1}
           side={THREE.DoubleSide}
+          color={0xffffff}
         />
       </mesh>
     );

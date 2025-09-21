@@ -49,6 +49,7 @@ export const getMachineIcon = (machineName: string): string | null => {
     'squatrack': '/icons/squatrack.png',
     'cable': '/icons/cable.png',
     'cable machine': '/icons/cable.png',
+    'crunchmachine': '/icons/crunchmachine.png',
   };
 
   // Check for direct matches first
@@ -79,6 +80,7 @@ export const getMachineIcon = (machineName: string): string | null => {
   if (name.includes('shoulder') && name.includes('press')) return '/icons/shoulderpress.png';
   if (name.includes('squat') && name.includes('rack')) return '/icons/squatrack.png';
   if (name.includes('cable')) return '/icons/cable.png';
+  if (name.includes('crunch') && name.includes('machine')) return '/icons/crunchmachine.png';
 
   // Default fallback - return null if no match found
   return null;
