@@ -10,12 +10,13 @@ import { MuscleSidebar } from '@/components/ui/MuscleSidebar';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'; // fixed import
 import { useGymState } from '@/hooks/useGymState';
 import { Machine } from '@/types/gym';
-import { getMachines } from './server';
+import { getMachines, setMachineInUse, setMachineNotInUse } from './server';
 
 export default function Home() {
   const { gymState, selectedFloor, selectedMachine, actions } = useGymState();
   const [allMachines, setAllMachines] = useState<Machine[]>([]);
   const actionsRef = useRef(actions);
+  const lastUpdatedMachineRef = useRef<{ id: number, timestamp: number } | null>(null);
   
   // Keep actionsRef current
   useEffect(() => {
@@ -30,12 +31,22 @@ export default function Home() {
 
     eventSource.onmessage = (event: MessageEvent) => {
       const data = JSON.parse(event.data);
-      console.log("Machine change:", data);
       
       // Handle machine status updates
       if (data.operationType === 'update' && data.updateDescription?.updatedFields?.in_use !== undefined) {
-        const machineId = parseInt(data.documentKey._id);
+        // Get the machine ID from the full document
+        if (!data.fullDocument || !data.fullDocument.id) {
+          return;
+        }
+        
+        const machineId = data.fullDocument.id;
         const newInUseStatus = data.updateDescription.updatedFields.in_use;
+        
+        // Avoid updating if this machine was just manually updated in the last 2 seconds
+        const lastUpdate = lastUpdatedMachineRef.current;
+        if (lastUpdate && lastUpdate.id === machineId && Date.now() - lastUpdate.timestamp < 2000) {
+          return;
+        }
         
         // Update local state
         setAllMachines(prev => 
@@ -52,9 +63,6 @@ export default function Home() {
     };
 
     getMachines().then(machines => {
-      console.log('Loaded', machines.length, 'machines from database');
-      console.log('Raw machines by floor:', machines.reduce((acc: Record<number, number>, m) => { acc[m.floor] = (acc[m.floor] || 0) + 1; return acc; }, {}));
-      
       const mappedMachines = machines.map(machine => ({
         id: machine.id,
         name: machine.name,
@@ -69,8 +77,6 @@ export default function Home() {
         dimensions: [0.8, 0.1, 0.8] as [number, number, number]
       }));
       
-      console.log('Mapped machines by floor:', mappedMachines.reduce((acc: Record<number, number>, m) => { acc[m.floor] = (acc[m.floor] || 0) + 1; return acc; }, {}));
-      
       setAllMachines(mappedMachines);
       actionsRef.current.loadMachines(mappedMachines);
     }).catch(error => {
@@ -83,7 +89,6 @@ export default function Home() {
   }, []); // Remove actions dependency to prevent infinite loop
 
   const handleMuscleGroupSelect = (muscleGroup: string | undefined) => {
-    console.log('Setting muscle group filter to:', muscleGroup);
     actions.setFilteredMuscleGroup(muscleGroup);
   };
 
@@ -93,18 +98,41 @@ export default function Home() {
       ? allMachines.find(m => m.id === machineId)
       : machineId;
     
-    console.log('=== MACHINE SELECT START ===');
-    console.log('Machine selected:', id);
-    console.log('Current selected machine:', gymState.selectedMachine);
-    console.log('Machine data:', machine);
-    
     // Just select the machine - don't clear filters
     actions.selectMachine(id);
     if (machine) {
       actions.setCurrentPosition({ floor: machine.floor, x: machine.x, y: machine.y });
     }
-    
-    console.log('=== MACHINE SELECT END ===');
+  };
+
+  const handleMachineToggle = async (machineId: number) => {
+    try {
+      // Find the machine from current state to ensure we have the most up-to-date data
+      const currentMachine = gymState.floors
+        .flatMap(floor => floor.machines)
+        .find(m => m.id === machineId);
+      
+      if (!currentMachine) {
+        return;
+      }
+
+      const newInUseStatus = !currentMachine.in_use;
+
+      // Track that we're manually updating this machine
+      lastUpdatedMachineRef.current = { id: machineId, timestamp: Date.now() };
+
+      // Update the database first
+      const result = newInUseStatus 
+        ? await setMachineInUse(machineId)
+        : await setMachineNotInUse(machineId);
+
+      if (result.success) {
+        // Update local state only if database update was successful
+        actions.toggleMachineStatus(machineId);
+      }
+    } catch (error) {
+      console.error('Error toggling machine status:', error);
+    }
   };
 
   const handleFindClosest = async (machine: Machine) => {
@@ -159,7 +187,7 @@ export default function Home() {
           gymState={gymState}
           onFloorSelect={actions.selectFloor}
           onMachineSelect={handleMachineSelect}
-          onMachineToggle={actions.toggleMachineStatus}
+          onMachineToggle={handleMachineToggle}
           onReturnToOverview={actions.returnToOverview}
         />
       </Suspense>
@@ -185,7 +213,7 @@ export default function Home() {
       {selectedMachine && (
         <MachineStatusPanel
           machine={selectedMachine}
-          onToggleStatus={() => actions.toggleMachineStatus(selectedMachine.id)}
+          onToggleStatus={() => handleMachineToggle(selectedMachine.id)}
           onClose={() => actions.selectMachine(undefined)} // fixed close
         />
       )}

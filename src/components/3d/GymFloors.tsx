@@ -49,8 +49,6 @@ const FloorComponent = ({
   // Show machines in overview mode for all floors, or in detail view only for selected floor
   const shouldShowMachines = !isDetailView || (isDetailView && isSelected);
   
-  console.log(`Floor ${floor.id}: isDetailView=${isDetailView}, isSelected=${isSelected}, shouldShowMachines=${shouldShowMachines}`);
-  
   // Cube dimensions
   const cubeSize = 12;
 
@@ -175,20 +173,12 @@ const FloorComponent = ({
     // Machines - only show when in detail view and floor is selected
     shouldShowMachines && React.createElement('group', {},
       (() => {
-        console.log(`Floor ${floor.id}: shouldShowMachines=${shouldShowMachines}, machines count=${floor.machines.length}`);
-        console.log(`Floor ${floor.id} machines:`, floor.machines.map(m => ({ id: m.id, name: m.name })));
         return floor.machines.map((machine) => {
           const isSelected = selectedMachine === machine.id;
           const isFiltered = !isSelected && !!(filteredMuscleGroup && !machine.muscles.some(muscle => 
             muscle.toLowerCase().includes(filteredMuscleGroup.toLowerCase()) ||
             filteredMuscleGroup.toLowerCase().includes(muscle.toLowerCase())
           ));
-          
-          if (isFiltered && !isSelected) {
-            console.log(`Machine ${machine.id} filtered because of muscle group: ${filteredMuscleGroup}, machine muscles: ${machine.muscles.join(', ')}`);
-          }
-          
-          console.log(`Rendering machine ${machine.id} on floor ${floor.id}: filtered=${isFiltered}, selected=${isSelected}`);
           
           return React.createElement(FlatGymMachine, {
             key: machine.id,

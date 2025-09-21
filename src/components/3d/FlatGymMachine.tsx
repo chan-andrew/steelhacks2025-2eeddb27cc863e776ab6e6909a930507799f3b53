@@ -15,8 +15,6 @@ interface FlatGymMachineProps {
 }
 
 const getMachineColor = (machine: Machine, isSelected: boolean, isFiltered: boolean = false) => {
-  console.log(`Machine ${machine.id}: selected=${isSelected}, filtered=${isFiltered}, in_use=${machine.in_use}`);
-  
   if (isSelected) {
     return '#FFD700'; // Gold for selected (always visible)
   }
